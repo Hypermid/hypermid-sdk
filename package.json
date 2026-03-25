@@ -1,0 +1,45 @@
+{
+  "name": "@hypermid/sdk",
+  "version": "1.0.0",
+  "description": "TypeScript SDK for the HyperMid Partner API — swap, bridge & on-ramp across 90+ chains",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run clean && npm run build"
+  },
+  "keywords": [
+    "hypermid",
+    "swap",
+    "bridge",
+    "cross-chain",
+    "defi",
+    "lifi",
+    "near-intents",
+    "onramp",
+    "web3"
+  ],
+  "author": "HyperMid",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "typescript": "^5.5.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
