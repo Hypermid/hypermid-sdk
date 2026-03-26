@@ -45,6 +45,10 @@ export interface Chain {
   name: string;
   chainType: string;
   nativeToken: NativeToken;
+  /** Hypermid chain slug (e.g. "ethereum", "solana", "near") */
+  slug?: string;
+  /** Which routing providers support this chain (e.g. ["lifi", "near-intents"]) */
+  providers?: string[];
   provider?: string;
   /** LI.FI chains include additional metadata (logo, coin, etc.) */
   [key: string]: unknown;

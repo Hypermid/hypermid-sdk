@@ -1,19 +1,39 @@
 /**
  * Chain ID constants for all supported chains.
  *
+ * EVM chains use their standard numeric chain IDs.
+ * Non-EVM chains can be referenced by slug string (preferred) or numeric ID.
+ *
  * @example
  * ```ts
- * import { ChainId } from "@hypermid/sdk";
+ * import { ChainId, ChainSlug } from "@hypermid/sdk";
  *
+ * // Numeric IDs (backwards compatible)
  * const quote = await hm.getQuote({
- *   fromChain: ChainId.ETHEREUM,
- *   toChain: ChainId.ARBITRUM,
+ *   fromChain: ChainId.ETHEREUM,    // 1
+ *   toChain: ChainId.ARBITRUM,      // 42161
+ *   ...
+ * });
+ *
+ * // String slugs (recommended for non-EVM)
+ * const quote2 = await hm.getQuote({
+ *   fromChain: ChainSlug.SOLANA,    // "solana"
+ *   toChain: ChainSlug.BITCOIN,     // "bitcoin"
  *   ...
  * });
  * ```
  */
 
-const NI_BASE = 900_000_000;
+import {
+  CHAIN_REGISTRY,
+  NI_CHAIN_BASE,
+  resolveChain,
+  type ChainEntry,
+} from "./chain-registry.js";
+
+// ─── Numeric Chain IDs (backwards compatible) ────────────────────────────────
+
+const NI_BASE = NI_CHAIN_BASE;
 
 export const ChainId = {
   // ─── EVM Chains ──────────────────────────────────────────────
@@ -56,23 +76,39 @@ export const ChainId = {
 export type ChainIdValue = (typeof ChainId)[keyof typeof ChainId];
 
 /**
- * Check if a chain ID belongs to a Near Intents-only chain.
+ * Human-readable chain slug constants (recommended for non-EVM chains).
+ *
+ * @example
+ * ```ts
+ * import { ChainSlug } from "@hypermid/sdk";
+ * const quote = await hm.getQuote({
+ *   fromChain: ChainSlug.SOLANA,     // "solana"
+ *   toChain: ChainSlug.NEAR,         // "near"
+ *   ...
+ * });
+ * ```
  */
-export function isNearIntentsChain(chainId: number): boolean {
-  return chainId >= NI_BASE && chainId < NI_BASE + 1000;
+export const ChainSlug = Object.fromEntries(
+  CHAIN_REGISTRY.map((c) => [c.slug.toUpperCase().replace(/-/g, "_"), c.slug])
+) as { [K: string]: string };
+
+/**
+ * Check if a chain ID belongs to a Near Intents-only chain.
+ * Accepts slug strings or numeric IDs.
+ */
+export function isNearIntentsChain(chainId: string | number): boolean {
+  if (typeof chainId === "number") {
+    return chainId >= NI_BASE && chainId < NI_BASE + 1000;
+  }
+  const entry = resolveChain(chainId);
+  return entry !== null && entry.numericId >= NI_BASE && entry.numericId < NI_BASE + 1000;
 }
 
 /**
  * Check if a chain supports wallet-connected deposit mode.
- * Chains with wallet connectors: EVM, Solana, Bitcoin, Sui, TON, Tron.
- * Other NI chains (NEAR, XRP, DOGE, etc.) require manual deposit.
+ * Accepts slug strings or numeric IDs.
  */
-export function supportsWalletDeposit(chainId: number): boolean {
-  if (chainId > 0 && chainId < NI_BASE) return true; // EVM
-  if (chainId === ChainId.SOLANA) return true;
-  if (chainId === ChainId.BITCOIN) return true;
-  if (chainId === ChainId.SUI) return true;
-  if (chainId === ChainId.TON) return true;
-  if (chainId === ChainId.TRON) return true;
-  return false;
+export function supportsWalletDeposit(chainId: string | number): boolean {
+  const entry = resolveChain(chainId);
+  return entry?.depositMode === "wallet";
 }

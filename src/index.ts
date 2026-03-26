@@ -5,8 +5,23 @@ export { HyperMid } from "./client.js";
 export { HyperMidError, HyperMidTimeoutError, HyperMidNetworkError } from "./errors.js";
 
 // ─── Chain constants ─────────────────────────────────────────────────────
-export { ChainId, isNearIntentsChain, supportsWalletDeposit } from "./chains.js";
+export { ChainId, ChainSlug, isNearIntentsChain, supportsWalletDeposit } from "./chains.js";
 export type { ChainIdValue } from "./chains.js";
+
+// ─── Chain registry ─────────────────────────────────────────────────
+export {
+  CHAIN_REGISTRY,
+  NI_CHAIN_BASE,
+  resolveChain,
+  toLifiChainId,
+  toNIBlockchain,
+  toNumericId,
+  isNIOnlyChain,
+  getAllChains,
+  getChainsByProvider,
+  getDryQuotePlaceholder,
+} from "./chain-registry.js";
+export type { ChainEntry, ChainType, Provider } from "./chain-registry.js";
 
 // ─── Type guards & helpers ───────────────────────────────────────────────
 export {
