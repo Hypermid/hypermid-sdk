@@ -35,7 +35,7 @@ export interface ExecutionUpdate {
   /** Current execution status */
   status: ExecutionStatus;
   /** The provider handling this swap */
-  provider: "lifi" | "near-intents";
+  provider: "lifi" | "near-intents" | "superswap";
   /** The execute response (available after EXECUTING) */
   executeResponse?: ExecuteResponse;
   /** The deposit status (Near Intents only, available during polling) */

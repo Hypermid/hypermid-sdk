@@ -235,7 +235,34 @@ export interface NIExecuteResponse {
   };
 }
 
-export type ExecuteResponse = LiFiExecuteResponse | NIExecuteResponse;
+export interface SuperSwapExecuteResponse {
+  provider: "superswap";
+  depositMode: "wallet";
+  transactionRequest: TransactionRequest;
+  quote: {
+    fromToken: Token;
+    toToken: Token;
+    fromAmount: string;
+    toAmount: string;
+    toAmountMin: string;
+    estimatedTime: number;
+    gasCosts: unknown[];
+    feeCosts: unknown[];
+  };
+  feeBps: number;
+  superswapMeta: {
+    direction: "inbound" | "outbound";
+    bridgeToken: string;
+    destinationToken: string;
+    hyperlaneMessageId?: string;
+  };
+  instructions: {
+    step1: string;
+    step2: string;
+  };
+}
+
+export type ExecuteResponse = LiFiExecuteResponse | NIExecuteResponse | SuperSwapExecuteResponse;
 
 // ─── Deposit (Near Intents) ──────────────────────────────────────────────
 
@@ -428,6 +455,68 @@ export interface WebhookCreated extends Webhook {
 
 export interface WebhooksListResponse {
   webhooks: Webhook[];
+}
+
+// ─── Balances ──────────────────────────────────────────────────────────
+
+export interface BalancesParams {
+  address: string;
+  chainIds?: number[];
+}
+
+export interface TokenBalance {
+  chainId: number;
+  address: string;
+  symbol: string;
+  name: string;
+  decimals: number;
+  balance: string;
+  priceUSD: number;
+  balanceUSD: number;
+  logoURI: string;
+  providers: string[];
+}
+
+export interface BalancesResponse {
+  address: string;
+  totalBalanceUSD: string;
+  balances: Record<string, TokenBalance[]>;
+}
+
+// ─── Allowance ─────────────────────────────────────────────────────────
+
+export interface AllowanceParams {
+  chainId: number;
+  token: string;
+  owner: string;
+  spender: string;
+}
+
+export interface AllowanceResponse {
+  chainId: number;
+  token: string;
+  owner: string;
+  spender: string;
+  allowance: string;
+  isApproved: boolean;
+}
+
+// ─── Inbound Receiver (SuperSwap) ──────────────────────────────────────
+
+export interface InboundReceiverParams {
+  txHash: string;
+  fromChain: number;
+  toChain: number;
+  receiverAddress: string;
+  outputToken: string;
+  signature?: string;
+}
+
+export interface InboundReceiverResponse {
+  registered: boolean;
+  recordId: string;
+  usdcAmount: string;
+  status: string;
 }
 
 // ─── Ping ────────────────────────────────────────────────────────────────

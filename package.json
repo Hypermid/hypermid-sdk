@@ -1,6 +1,6 @@
 {
   "name": "@hypermid/sdk",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "TypeScript SDK for the HyperMid Partner API — swap, bridge & on-ramp across 90+ chains",
   "type": "module",
   "main": "./dist/index.js",

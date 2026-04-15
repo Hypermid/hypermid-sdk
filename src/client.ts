@@ -35,6 +35,12 @@ import type {
   WebhookCreated,
   WebhooksListResponse,
   PingResponse,
+  BalancesParams,
+  BalancesResponse,
+  AllowanceParams,
+  AllowanceResponse,
+  InboundReceiverParams,
+  InboundReceiverResponse,
 } from "./types.js";
 import {
   HyperMidError,
@@ -524,6 +530,63 @@ export class HyperMid {
    */
   async deleteWebhook(webhookId: string): Promise<{ deleted: boolean; id: string }> {
     return this.delete<{ deleted: boolean; id: string }>(`/partner/webhooks/${webhookId}`);
+  }
+
+  // ─── Balances ────────────────────────────────────────────────────────
+
+  /**
+   * Get token balances for a wallet address across chains.
+   * Uses Alchemy Portfolio API + PulseChain RPC + Blockstream (BTC) on the backend.
+   *
+   * @example
+   * ```ts
+   * const balances = await hm.getBalances({
+   *   address: "0x1234...",
+   *   chainIds: [1, 42161, 8453, 369],
+   * });
+   * console.log(balances.totalBalanceUSD);
+   * ```
+   */
+  async getBalances(params: BalancesParams): Promise<BalancesResponse> {
+    const query: Record<string, string> = { address: params.address };
+    if (params.chainIds?.length) query.chainIds = params.chainIds.join(",");
+    return this.get<BalancesResponse>("/balances", query);
+  }
+
+  // ─── Allowance ──────────────────────────────────────────────────────
+
+  /**
+   * Check ERC20 token allowance for a given owner/spender pair.
+   * Returns the current allowance and whether the token is approved.
+   */
+  async getAllowance(params: AllowanceParams): Promise<AllowanceResponse> {
+    return this.get<AllowanceResponse>("/allowance", {
+      chainId: String(params.chainId),
+      token: params.token,
+      owner: params.owner,
+      spender: params.spender,
+    });
+  }
+
+  // ─── Inbound Receiver (SuperSwap) ───────────────────────────────────
+
+  /**
+   * Register a USDC deposit at the InboundReceiver contract for SuperSwap.
+   * Call this AFTER the user's bridge transaction confirms on-chain.
+   *
+   * @example
+   * ```ts
+   * const result = await hm.registerInboundReceiver({
+   *   txHash: "0xabc...",
+   *   fromChain: 8453,
+   *   toChain: 369,
+   *   receiverAddress: "0xuser...",
+   *   outputToken: "0x0000...0000", // PLS
+   * });
+   * ```
+   */
+  async registerInboundReceiver(params: InboundReceiverParams): Promise<InboundReceiverResponse> {
+    return this.post<InboundReceiverResponse>("/inbound-receiver/register", params as unknown as Record<string, unknown>);
   }
 
   // ─── Health Check ────────────────────────────────────────────────────

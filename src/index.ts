@@ -27,6 +27,7 @@ export type { ChainEntry, ChainType, Provider } from "./chain-registry.js";
 export {
   isLiFiRoute,
   isNearIntentsRoute,
+  isSuperSwapRoute,
   isManualDeposit,
   isWalletDeposit,
   isNIStatusTerminal,
@@ -99,6 +100,7 @@ export type {
   ExecuteResponse,
   LiFiExecuteResponse,
   NIExecuteResponse,
+  SuperSwapExecuteResponse,
   TransactionRequest,
 
   // Deposit
@@ -134,6 +136,19 @@ export type {
   Webhook,
   WebhookCreated,
   WebhooksListResponse,
+
+  // Balances
+  BalancesParams,
+  BalancesResponse,
+  TokenBalance,
+
+  // Allowance
+  AllowanceParams,
+  AllowanceResponse,
+
+  // Inbound Receiver (SuperSwap)
+  InboundReceiverParams,
+  InboundReceiverResponse,
 
   // Ping
   PingResponse,

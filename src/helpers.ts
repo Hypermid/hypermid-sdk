@@ -6,6 +6,7 @@ import type {
   ExecuteResponse,
   LiFiExecuteResponse,
   NIExecuteResponse,
+  SuperSwapExecuteResponse,
   DepositStatusResponse,
 } from "./types.js";
 
@@ -25,6 +26,22 @@ import type {
  */
 export function isLiFiRoute(response: ExecuteResponse): response is LiFiExecuteResponse {
   return response.provider === "lifi";
+}
+
+/**
+ * Check if an execute response is a SuperSwap route (PulseChain via Hyperlane).
+ *
+ * @example
+ * ```ts
+ * const result = await hm.execute(params);
+ * if (isSuperSwapRoute(result)) {
+ *   const tx = result.transactionRequest;
+ *   // Sign and send, then call registerInboundReceiver()
+ * }
+ * ```
+ */
+export function isSuperSwapRoute(response: ExecuteResponse): response is SuperSwapExecuteResponse {
+  return response.provider === "superswap";
 }
 
 /**
