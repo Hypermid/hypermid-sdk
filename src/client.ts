@@ -37,8 +37,6 @@ import type {
   PingResponse,
   BalancesParams,
   BalancesResponse,
-  AllowanceParams,
-  AllowanceResponse,
   InboundReceiverParams,
   InboundReceiverResponse,
 } from "./types.js";
@@ -551,21 +549,6 @@ export class HyperMid {
     const query: Record<string, string> = { address: params.address };
     if (params.chainIds?.length) query.chainIds = params.chainIds.join(",");
     return this.get<BalancesResponse>("/balances", query);
-  }
-
-  // ─── Allowance ──────────────────────────────────────────────────────
-
-  /**
-   * Check ERC20 token allowance for a given owner/spender pair.
-   * Returns the current allowance and whether the token is approved.
-   */
-  async getAllowance(params: AllowanceParams): Promise<AllowanceResponse> {
-    return this.get<AllowanceResponse>("/allowance", {
-      chainId: String(params.chainId),
-      token: params.token,
-      owner: params.owner,
-      spender: params.spender,
-    });
   }
 
   // ─── Inbound Receiver (SuperSwap) ───────────────────────────────────

@@ -142,10 +142,6 @@ export type {
   BalancesResponse,
   TokenBalance,
 
-  // Allowance
-  AllowanceParams,
-  AllowanceResponse,
-
   // Inbound Receiver (SuperSwap)
   InboundReceiverParams,
   InboundReceiverResponse,

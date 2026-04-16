@@ -483,24 +483,6 @@ export interface BalancesResponse {
   balances: Record<string, TokenBalance[]>;
 }
 
-// ─── Allowance ─────────────────────────────────────────────────────────
-
-export interface AllowanceParams {
-  chainId: number;
-  token: string;
-  owner: string;
-  spender: string;
-}
-
-export interface AllowanceResponse {
-  chainId: number;
-  token: string;
-  owner: string;
-  spender: string;
-  allowance: string;
-  isApproved: boolean;
-}
-
 // ─── Inbound Receiver (SuperSwap) ──────────────────────────────────────
 
 export interface InboundReceiverParams {
