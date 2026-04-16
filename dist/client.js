@@ -1,0 +1,469 @@
+import { HyperMidError, HyperMidTimeoutError, HyperMidNetworkError, } from "./errors.js";
+const DEFAULT_BASE_URL = "https://api.hypermid.io";
+const DEFAULT_TIMEOUT = 30_000;
+export class HyperMid {
+    baseUrl;
+    apiKey;
+    timeout;
+    _fetch;
+    constructor(config = {}) {
+        this.baseUrl = (config.baseUrl || DEFAULT_BASE_URL).replace(/\/+$/, "");
+        this.apiKey = config.apiKey;
+        this.timeout = config.timeout || DEFAULT_TIMEOUT;
+        this._fetch = config.fetch || globalThis.fetch;
+    }
+    // ─── Internal helpers ────────────────────────────────────────────────
+    async request(method, path, options) {
+        let url = `${this.baseUrl}/v1${path}`;
+        // Build query string
+        if (options?.params) {
+            const qs = new URLSearchParams();
+            for (const [k, v] of Object.entries(options.params)) {
+                if (v !== undefined && v !== null && v !== "") {
+                    qs.set(k, String(v));
+                }
+            }
+            const qsStr = qs.toString();
+            if (qsStr)
+                url += `?${qsStr}`;
+        }
+        const headers = {};
+        if (this.apiKey) {
+            headers["X-API-Key"] = this.apiKey;
+        }
+        if (method === "POST" || method === "DELETE") {
+            headers["Content-Type"] = "application/json";
+        }
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), this.timeout);
+        let res;
+        try {
+            res = await this._fetch(url, {
+                method,
+                headers,
+                body: options?.body ? JSON.stringify(options.body) : undefined,
+                signal: controller.signal,
+            });
+        }
+        catch (err) {
+            clearTimeout(timer);
+            if (err instanceof DOMException && err.name === "AbortError") {
+                throw new HyperMidTimeoutError(this.timeout);
+            }
+            throw new HyperMidNetworkError(err instanceof Error ? err.message : "Network request failed", err instanceof Error ? err : undefined);
+        }
+        finally {
+            clearTimeout(timer);
+        }
+        let json;
+        try {
+            json = (await res.json());
+        }
+        catch {
+            throw new HyperMidNetworkError(`Invalid JSON response (HTTP ${res.status})`);
+        }
+        if (json.error) {
+            throw new HyperMidError(json.error.code, json.error.message, res.status, json.meta, json.error.details);
+        }
+        return json.data;
+    }
+    get(path, params) {
+        return this.request("GET", path, { params });
+    }
+    post(path, body) {
+        return this.request("POST", path, { body });
+    }
+    delete(path) {
+        return this.request("DELETE", path);
+    }
+    // ─── Core Swap Endpoints ─────────────────────────────────────────────
+    /**
+     * Get all supported chains (LI.FI + Near Intents).
+     * Cached server-side for 1 hour.
+     */
+    async getChains() {
+        return this.get("/chains");
+    }
+    /**
+     * Get available tokens, optionally filtered by chains and keywords.
+     * Cached server-side for 5 minutes.
+     */
+    async getTokens(params) {
+        return this.get("/tokens", params);
+    }
+    /**
+     * Get available connections (which token pairs can be swapped).
+     */
+    async getConnections(params) {
+        return this.get("/connections", {
+            fromChain: String(params.fromChain),
+            fromToken: params.fromToken,
+            toChain: params.toChain ? String(params.toChain) : undefined,
+        });
+    }
+    /**
+     * Get available bridge/swap tools.
+     * Cached server-side for 1 hour.
+     */
+    async getTools() {
+        return this.get("/tools");
+    }
+    /**
+     * Get gas prices for specified chains.
+     */
+    async getGasPrices(params) {
+        return this.get("/gas-prices", { chains: params.chains });
+    }
+    /**
+     * Get the best swap quote for a token pair.
+     *
+     * @example
+     * ```ts
+     * const quote = await hm.getQuote({
+     *   fromChain: 1,
+     *   fromToken: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+     *   fromAmount: "100000000",  // 100 USDC
+     *   toChain: 42161,
+     *   toToken: "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8",
+     *   fromAddress: "0x...",
+     * });
+     * ```
+     */
+    async getQuote(params) {
+        return this.get("/quote", {
+            fromChain: String(params.fromChain),
+            fromToken: params.fromToken,
+            fromAmount: params.fromAmount,
+            toChain: String(params.toChain),
+            toToken: params.toToken,
+            fromAddress: params.fromAddress,
+            toAddress: params.toAddress,
+            slippage: params.slippage !== undefined ? String(params.slippage) : undefined,
+            order: params.order,
+        });
+    }
+    /**
+     * Get available routes for a token pair (multi-route comparison).
+     * Supports both GET and POST — SDK uses POST for flexibility.
+     */
+    async getRoutes(params) {
+        return this.post("/routes", {
+            fromChain: String(params.fromChain),
+            fromToken: params.fromToken,
+            fromAmount: params.fromAmount,
+            toChain: String(params.toChain),
+            toToken: params.toToken,
+            fromAddress: params.fromAddress,
+            toAddress: params.toAddress,
+            slippage: params.slippage,
+            order: params.order,
+        });
+    }
+    /**
+     * Check the status of a cross-chain swap.
+     *
+     * @example LI.FI status
+     * ```ts
+     * const status = await hm.getStatus({
+     *   txHash: "0x...",
+     *   fromChain: 1,
+     *   toChain: 42161,
+     * });
+     * ```
+     *
+     * @example Near Intents status
+     * ```ts
+     * const status = await hm.getStatus({
+     *   provider: "near-intents",
+     *   correlationId: "abc-123",
+     * });
+     * ```
+     */
+    async getStatus(params) {
+        const queryParams = {};
+        if ("provider" in params && params.provider === "near-intents") {
+            queryParams.provider = "near-intents";
+            queryParams.correlationId = params.correlationId;
+        }
+        else {
+            const p = params;
+            queryParams.txHash = p.txHash;
+            if (p.bridge)
+                queryParams.bridge = p.bridge;
+            if (p.fromChain)
+                queryParams.fromChain = String(p.fromChain);
+            if (p.toChain)
+                queryParams.toChain = String(p.toChain);
+        }
+        return this.get("/status", queryParams);
+    }
+    // ─── Execute ─────────────────────────────────────────────────────────
+    /**
+     * Get full transaction data for execution.
+     *
+     * **LI.FI routes**: Returns `transactionRequest` — sign and broadcast with your wallet.
+     *
+     * **Near Intents routes**: Returns `depositAddress` — send tokens there.
+     * Use `depositMode` to control wallet vs. manual flow.
+     *
+     * @example LI.FI swap
+     * ```ts
+     * const result = await hm.execute({
+     *   fromChain: 1,
+     *   fromToken: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+     *   fromAmount: "100000000",
+     *   toChain: 42161,
+     *   toToken: "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8",
+     *   fromAddress: "0x...",
+     *   toAddress: "0x...",
+     * });
+     * if (result.provider === "lifi") {
+     *   // Sign result.transactionRequest with your wallet
+     * }
+     * ```
+     *
+     * @example Near Intents manual deposit (user hasn't connected wallet)
+     * ```ts
+     * const result = await hm.execute({
+     *   fromChain: 900000003,  // Tron
+     *   fromToken: "...",
+     *   fromAmount: "10000000",
+     *   toChain: 900000002,  // TON
+     *   toToken: "...",
+     *   fromAddress: "T...",
+     *   toAddress: "EQ...",
+     *   depositMode: "manual",  // Force manual mode
+     * });
+     * // Show result.depositAddress to user with QR code
+     * ```
+     */
+    async execute(params) {
+        return this.post("/execute", {
+            fromChain: String(params.fromChain),
+            fromToken: params.fromToken,
+            fromAmount: params.fromAmount,
+            toChain: String(params.toChain),
+            toToken: params.toToken,
+            fromAddress: params.fromAddress,
+            toAddress: params.toAddress,
+            ...(params.depositMode ? { depositMode: params.depositMode } : {}),
+            ...(params.slippage !== undefined ? { slippage: params.slippage } : {}),
+            ...(params.order ? { order: params.order } : {}),
+            ...(params.refundAddress ? { refundAddress: params.refundAddress } : {}),
+        });
+    }
+    /**
+     * Submit a deposit transaction hash after sending tokens to a Near Intents deposit address.
+     * Only needed for `depositMode: "wallet"`. Manual deposits are auto-detected.
+     */
+    async submitDeposit(params) {
+        return this.post("/execute/deposit/submit", {
+            txHash: params.txHash,
+            depositAddress: params.depositAddress,
+        });
+    }
+    /**
+     * Check the status of a Near Intents deposit/swap.
+     *
+     * @example
+     * ```ts
+     * const status = await hm.getDepositStatus({
+     *   depositAddress: "0x...",
+     * });
+     * if (status.status === "SUCCESS") {
+     *   console.log("Swap complete!", status.swapDetails);
+     * }
+     * ```
+     */
+    async getDepositStatus(params) {
+        return this.get("/execute/deposit/status", {
+            depositAddress: params.depositAddress,
+            depositMemo: params.depositMemo,
+        });
+    }
+    // ─── On-Ramp ─────────────────────────────────────────────────────────
+    /**
+     * Get a fiat → crypto price quote.
+     */
+    async getOnrampQuote(params) {
+        return this.post("/onramp/quote", {
+            fiatAmount: params.fiatAmount,
+            fiatCurrency: params.fiatCurrency,
+            cryptoToken: params.cryptoToken,
+            cryptoChain: params.cryptoChain,
+            ...(params.walletAddress ? { walletAddress: params.walletAddress } : {}),
+            ...(params.paymentMode ? { paymentMode: params.paymentMode } : {}),
+            ...(params.userCountry ? { userCountry: params.userCountry } : {}),
+        });
+    }
+    /**
+     * Create a fiat → crypto purchase session. Returns a redirect URL
+     * to the payment page.
+     *
+     * @example
+     * ```ts
+     * const { redirectUrl, orderUid } = await hm.createOnrampCheckout({
+     *   walletAddress: "0x...",
+     *   cryptoToken: "ETH",
+     *   cryptoChain: "ethereum",
+     *   fiatCurrency: "USD",
+     *   fiatAmount: 100,
+     * });
+     * // Redirect user to redirectUrl
+     * ```
+     */
+    async createOnrampCheckout(params) {
+        return this.post("/onramp/checkout", {
+            walletAddress: params.walletAddress,
+            cryptoToken: params.cryptoToken,
+            cryptoChain: params.cryptoChain,
+            fiatCurrency: params.fiatCurrency,
+            fiatAmount: params.fiatAmount,
+            ...(params.email ? { email: params.email } : {}),
+            ...(params.returnUrl ? { returnUrl: params.returnUrl } : {}),
+            ...(params.paymentMode ? { paymentMode: params.paymentMode } : {}),
+        });
+    }
+    /**
+     * Check on-ramp order status.
+     */
+    async getOnrampStatus(orderUid) {
+        return this.get("/onramp/status", { orderUid });
+    }
+    /**
+     * Get supported chains and tokens for on-ramp.
+     * Cached server-side for 5 minutes.
+     */
+    async getOnrampConfig() {
+        return this.get("/onramp/config");
+    }
+    /**
+     * Get asset config (min/max amounts, precision, payment methods).
+     */
+    async getOnrampAssets(params) {
+        return this.get("/onramp/assets", {
+            currency: params.currency,
+            chain: params.chain,
+            orderCurrency: params.orderCurrency,
+        });
+    }
+    // ─── Swap Event ──────────────────────────────────────────────────────
+    /**
+     * Record a swap event for analytics. partner_id is automatically
+     * attributed from your API key.
+     */
+    async recordSwapEvent(params) {
+        return this.post("/swap-event", params);
+    }
+    // ─── Partner (requires API key) ──────────────────────────────────────
+    /**
+     * Get your partner info (requires API key).
+     */
+    async getPartnerInfo() {
+        return this.get("/partner/me");
+    }
+    /**
+     * Get volume, fee, and performance stats (requires API key).
+     *
+     * @example
+     * ```ts
+     * const stats = await hm.getPartnerStats({
+     *   from: "2025-01-01",
+     *   to: "2025-03-31",
+     * });
+     * console.log(`Volume: $${stats.volume_usd}`);
+     * ```
+     */
+    async getPartnerStats(params) {
+        return this.get("/partner/stats", params);
+    }
+    /**
+     * Get paginated transaction history (requires API key).
+     */
+    async getPartnerTransactions(params) {
+        return this.get("/partner/transactions", {
+            page: params?.page,
+            limit: params?.limit,
+        });
+    }
+    // ─── Webhooks (requires API key) ─────────────────────────────────────
+    /**
+     * Register a webhook endpoint. Returns the signing secret — store it securely!
+     * The secret is only shown once, on creation.
+     *
+     * @example
+     * ```ts
+     * const webhook = await hm.createWebhook({
+     *   url: "https://myapp.com/webhooks/hypermid",
+     *   events: ["swap.completed", "onramp.completed"],
+     * });
+     * // Store webhook.secret securely!
+     * ```
+     */
+    async createWebhook(params) {
+        return this.post("/partner/webhooks", {
+            url: params.url,
+            events: params.events,
+        });
+    }
+    /**
+     * List all registered webhooks (requires API key).
+     * Note: webhook secrets are never returned in list responses.
+     */
+    async listWebhooks() {
+        return this.get("/partner/webhooks");
+    }
+    /**
+     * Delete a webhook by ID (requires API key).
+     */
+    async deleteWebhook(webhookId) {
+        return this.delete(`/partner/webhooks/${webhookId}`);
+    }
+    // ─── Balances ────────────────────────────────────────────────────────
+    /**
+     * Get token balances for a wallet address across chains.
+     * Uses Alchemy Portfolio API + PulseChain RPC + Blockstream (BTC) on the backend.
+     *
+     * @example
+     * ```ts
+     * const balances = await hm.getBalances({
+     *   address: "0x1234...",
+     *   chainIds: [1, 42161, 8453, 369],
+     * });
+     * console.log(balances.totalBalanceUSD);
+     * ```
+     */
+    async getBalances(params) {
+        const query = { address: params.address };
+        if (params.chainIds?.length)
+            query.chainIds = params.chainIds.join(",");
+        return this.get("/balances", query);
+    }
+    // ─── Inbound Receiver (SuperSwap) ───────────────────────────────────
+    /**
+     * Register a USDC deposit at the InboundReceiver contract for SuperSwap.
+     * Call this AFTER the user's bridge transaction confirms on-chain.
+     *
+     * @example
+     * ```ts
+     * const result = await hm.registerInboundReceiver({
+     *   txHash: "0xabc...",
+     *   fromChain: 8453,
+     *   toChain: 369,
+     *   receiverAddress: "0xuser...",
+     *   outputToken: "0x0000...0000", // PLS
+     * });
+     * ```
+     */
+    async registerInboundReceiver(params) {
+        return this.post("/inbound-receiver/register", params);
+    }
+    // ─── Health Check ────────────────────────────────────────────────────
+    /**
+     * Simple health check. Returns API status, version, uptime, and provider statuses.
+     */
+    async ping() {
+        return this.get("/ping");
+    }
+}
+//# sourceMappingURL=client.js.map
