@@ -406,12 +406,23 @@ export interface BalancesResponse {
     balances: Record<string, TokenBalance[]>;
 }
 export interface InboundReceiverParams {
+    /** Source-chain tx hash that deposited USDC into the InboundReceiver */
     txHash: string;
-    fromChain: number;
-    toChain: number;
-    receiverAddress: string;
+    /** Address that sent the deposit (must match the tx sender on-chain) */
+    fromAddress: string;
+    /** Destination address that will receive the output token on PulseChain */
+    toAddress: string;
+    /** Output token address on PulseChain (e.g. WPLS, HEX, USDCh) */
     outputToken: string;
-    signature?: string;
+    /** Destination Hyperlane domain (369 for PulseChain) */
+    destinationDomain: number;
+    /**
+     * EIP-712 signature over `RegisterDeposit(txHash, toAddress, outputToken,
+     * destinationDomain)` with domain `{ name: "HypermidInboundReceiver",
+     * version: "1", chainId: <source chain> }`. Required — the backend rejects
+     * unsigned registrations.
+     */
+    signature: string;
 }
 export interface InboundReceiverResponse {
     registered: boolean;
