@@ -140,6 +140,7 @@ export type {
   // Balances
   BalancesParams,
   BalancesResponse,
+  BalanceChainMeta,
   TokenBalance,
 
   // Inbound Receiver (SuperSwap)
