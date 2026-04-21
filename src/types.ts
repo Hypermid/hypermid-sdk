@@ -477,10 +477,38 @@ export interface TokenBalance {
   providers: string[];
 }
 
+/**
+ * Per-chain status metadata, added alongside `balances` so callers can
+ * distinguish "no tokens on this chain" from "upstream timed out — try
+ * again" without inspecting the actual balance array.
+ *
+ * Legacy callers that only read `balances`/`totalBalanceUSD` continue
+ * to work unchanged; `chainMeta`/`cacheHit`/`cachedAt` are optional.
+ */
+export interface BalanceChainMeta {
+  /** true when the chain's balance fetch completed successfully. */
+  ok: boolean;
+  /** Populated when `ok=false`. Distinguishes user-fixable from transient errors. */
+  error?: 'timeout' | 'degraded' | 'rpc_error' | 'unsupported';
+  /** Which upstream served (or tried to serve) this chain. */
+  source?: 'alchemy' | 'multicall' | 'blockstream' | 'pulsechain';
+  /** Wall-clock milliseconds spent fetching this chain. */
+  durationMs: number;
+  /** True when the data was served from a stale cache because the upstream is degraded. */
+  stale?: boolean;
+}
+
 export interface BalancesResponse {
   address: string;
   totalBalanceUSD: string;
   balances: Record<string, TokenBalance[]>;
+  /** Per-chain status. Use it to render a retry chip for failing chains
+   *  instead of hiding them from the UI. */
+  chainMeta?: Record<string, BalanceChainMeta>;
+  /** ISO timestamp of when the payload was generated (or last refreshed). */
+  cachedAt?: string;
+  /** True when the backend served from its 30-s result cache. */
+  cacheHit?: boolean;
 }
 
 // ─── Inbound Receiver (SuperSwap multi-step) ───────────────────────────
