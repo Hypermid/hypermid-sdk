@@ -274,7 +274,14 @@ export class HyperMid {
       queryParams.provider = "near-intents";
       queryParams.correlationId = params.correlationId;
     } else {
-      const p = params as { txHash: string; bridge?: string; fromChain?: string | number; toChain?: string | number };
+      const p = params as { provider?: string; txHash: string; bridge?: string; fromChain?: string | number; toChain?: string | number };
+      // Lark #188 — thread `provider` through for superswap too. Pre-fix
+      // we dropped it, so the API's /v1/status auto-detect only checked
+      // inbound_receiver_transactions and missed the outbound table —
+      // outbound polls always fell through to LiFi (which doesn't know
+      // the PulseChain source tx) and the modal never saw status='DONE',
+      // staying stuck on "Awaiting…" past completion.
+      if (p.provider) queryParams.provider = p.provider;
       queryParams.txHash = p.txHash;
       if (p.bridge) queryParams.bridge = p.bridge;
       if (p.fromChain) queryParams.fromChain = String(p.fromChain);
