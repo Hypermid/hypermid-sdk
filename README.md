@@ -10,12 +10,18 @@ npm install @hypermid/sdk
 
 ## Quick start
 
+No API key required. The SDK works anonymously out of the box at the
+default fee tier — pass an API key only if you're a partner with
+custom fee terms.
+
 ```ts
 import { HyperMid } from "@hypermid/sdk";
 
-const hm = new HyperMid({
-  apiKey: process.env.HYPERMID_API_KEY, // optional — anonymous tier works for testing
-});
+// Anonymous — works immediately, no signup
+const hm = new HyperMid();
+
+// Partner with custom fees / discounts
+const hm = new HyperMid({ apiKey: process.env.HYPERMID_API_KEY });
 
 // 1. Quote
 const quote = await hm.getQuote({
@@ -46,11 +52,15 @@ const status = await hm.getStatus({ txHash: "0x...", chainId: 1 });
 
 ## Authentication
 
-Pass your partner API key via the `apiKey` option. The SDK sends it as the
-`X-API-Key` header. Without a key you get the anonymous tier
-(100 req/min, 30 bps fee).
+The API is open by default — every endpoint works without
+authentication, so you can integrate, test, and ship without a signup.
 
-Get a key at [partner.hypermid.io](https://partner.hypermid.io).
+An **API key is only needed if you're a partner** with negotiated terms
+(custom fee splits, fee discounts, volume tiers, higher rate limits,
+webhook events scoped to your traffic). When set, the SDK sends it as
+the `X-API-Key` header.
+
+Apply for a partner account at [partner.hypermid.io](https://partner.hypermid.io).
 
 ## Documentation
 

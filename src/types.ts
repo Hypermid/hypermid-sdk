@@ -21,7 +21,11 @@ export interface ApiResponse<T = unknown> {
 // ─── Config ──────────────────────────────────────────────────────────────
 
 export interface HyperMidConfig {
-  /** API key for authenticated access (2000 req/min, partner fee tier). Optional — anonymous = 100 req/min. */
+  /**
+   * Partner API key. **Optional** — the API works fully without a key.
+   * Set this only if you're a partner with negotiated fee terms
+   * (custom splits, discounts, higher rate limits). Sent as `X-API-Key`.
+   */
   apiKey?: string;
   /** Base URL override (default: https://api.hypermid.io) */
   baseUrl?: string;
