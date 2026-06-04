@@ -26,7 +26,6 @@
  * });
  * ```
  */
-
 /**
  * Verify a webhook signature using HMAC-SHA256.
  *
@@ -37,50 +36,41 @@
  * @param secret - Your webhook signing secret (from webhook creation)
  * @returns `true` if the signature is valid
  */
-export async function verifyWebhookSignature(
-  body: string | Uint8Array,
-  signature: string,
-  secret: string,
-): Promise<boolean> {
-  const bodyStr = typeof body === "string" ? body : new TextDecoder().decode(body);
-
-  // Try Node.js crypto first (synchronous, faster)
-  try {
-    const crypto = await import("node:crypto");
-    const expected = crypto
-      .createHmac("sha256", secret)
-      .update(bodyStr)
-      .digest("hex");
-    return timingSafeEqual(expected, signature);
-  } catch {
-    // Not in Node.js — use SubtleCrypto (edge runtimes, Deno, Bun)
-  }
-
-  try {
-    const encoder = new TextEncoder();
-    const key = await globalThis.crypto.subtle.importKey(
-      "raw",
-      encoder.encode(secret),
-      { name: "HMAC", hash: "SHA-256" },
-      false,
-      ["sign"],
-    );
-    const sig = await globalThis.crypto.subtle.sign("HMAC", key, encoder.encode(bodyStr));
-    const expected = Array.from(new Uint8Array(sig))
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
-    return timingSafeEqual(expected, signature);
-  } catch {
-    return false;
-  }
+export async function verifyWebhookSignature(body, signature, secret) {
+    const bodyStr = typeof body === "string" ? body : new TextDecoder().decode(body);
+    // Try Node.js crypto first (synchronous, faster)
+    try {
+        const crypto = await import("node:crypto");
+        const expected = crypto
+            .createHmac("sha256", secret)
+            .update(bodyStr)
+            .digest("hex");
+        return timingSafeEqual(expected, signature);
+    }
+    catch {
+        // Not in Node.js — use SubtleCrypto (edge runtimes, Deno, Bun)
+    }
+    try {
+        const encoder = new TextEncoder();
+        const key = await globalThis.crypto.subtle.importKey("raw", encoder.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+        const sig = await globalThis.crypto.subtle.sign("HMAC", key, encoder.encode(bodyStr));
+        const expected = Array.from(new Uint8Array(sig))
+            .map((b) => b.toString(16).padStart(2, "0"))
+            .join("");
+        return timingSafeEqual(expected, signature);
+    }
+    catch {
+        return false;
+    }
 }
-
 /** Constant-time string comparison to prevent timing attacks */
-function timingSafeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let result = 0;
-  for (let i = 0; i < a.length; i++) {
-    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  }
-  return result === 0;
+function timingSafeEqual(a, b) {
+    if (a.length !== b.length)
+        return false;
+    let result = 0;
+    for (let i = 0; i < a.length; i++) {
+        result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+    }
+    return result === 0;
 }
+//# sourceMappingURL=webhook-verify.js.map

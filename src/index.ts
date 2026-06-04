@@ -1,8 +1,8 @@
 // ─── Core client ─────────────────────────────────────────────────────────
-export { HyperMid } from "./client.js";
+export { Hypermid } from "./client.js";
 
 // ─── Errors ──────────────────────────────────────────────────────────────
-export { HyperMidError, HyperMidTimeoutError, HyperMidNetworkError } from "./errors.js";
+export { HypermidError, HypermidTimeoutError, HypermidNetworkError } from "./errors.js";
 
 // ─── Chain constants ─────────────────────────────────────────────────────
 export { ChainId, ChainSlug, isNearIntentsChain, supportsWalletDeposit } from "./chains.js";
@@ -57,7 +57,7 @@ export { verifyWebhookSignature } from "./webhook-verify.js";
 // ─── Types ───────────────────────────────────────────────────────────────
 export type {
   // Config
-  HyperMidConfig,
+  HypermidConfig,
 
   // API envelope
   ApiResponse,

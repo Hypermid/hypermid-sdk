@@ -1,5 +1,5 @@
 import type {
-  HyperMidConfig,
+  HypermidConfig,
   ApiResponse,
   ChainsResponse,
   TokensParams,
@@ -41,21 +41,21 @@ import type {
   InboundReceiverResponse,
 } from "./types.js";
 import {
-  HyperMidError,
-  HyperMidTimeoutError,
-  HyperMidNetworkError,
+  HypermidError,
+  HypermidTimeoutError,
+  HypermidNetworkError,
 } from "./errors.js";
 
 const DEFAULT_BASE_URL = "https://api.hypermid.io";
 const DEFAULT_TIMEOUT = 30_000;
 
-export class HyperMid {
+export class Hypermid {
   private readonly baseUrl: string;
   private readonly apiKey?: string;
   private readonly timeout: number;
   private readonly _fetch: typeof globalThis.fetch;
 
-  constructor(config: HyperMidConfig = {}) {
+  constructor(config: HypermidConfig = {}) {
     this.baseUrl = (config.baseUrl || DEFAULT_BASE_URL).replace(/\/+$/, "");
     this.apiKey = config.apiKey;
     this.timeout = config.timeout || DEFAULT_TIMEOUT;
@@ -108,9 +108,9 @@ export class HyperMid {
     } catch (err) {
       clearTimeout(timer);
       if (err instanceof DOMException && err.name === "AbortError") {
-        throw new HyperMidTimeoutError(this.timeout);
+        throw new HypermidTimeoutError(this.timeout);
       }
-      throw new HyperMidNetworkError(
+      throw new HypermidNetworkError(
         err instanceof Error ? err.message : "Network request failed",
         err instanceof Error ? err : undefined,
       );
@@ -122,11 +122,11 @@ export class HyperMid {
     try {
       json = (await res.json()) as ApiResponse<T>;
     } catch {
-      throw new HyperMidNetworkError(`Invalid JSON response (HTTP ${res.status})`);
+      throw new HypermidNetworkError(`Invalid JSON response (HTTP ${res.status})`);
     }
 
     if (json.error) {
-      throw new HyperMidError(
+      throw new HypermidError(
         json.error.code,
         json.error.message,
         res.status,

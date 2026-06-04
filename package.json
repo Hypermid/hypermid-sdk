@@ -1,15 +1,16 @@
 {
   "name": "@hypermid/sdk",
-  "version": "1.2.0",
-  "description": "TypeScript SDK for the HyperMid Partner API — swap, bridge & on-ramp across 90+ chains",
+  "version": "2.0.0",
+  "description": "TypeScript SDK for the Hypermid Partner API — swap, bridge & on-ramp across 90+ chains",
   "type": "module",
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/esm/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/esm/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js"
     }
   },
   "files": [
@@ -17,8 +18,10 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch",
+    "build": "npm run build:esm && npm run build:cjs",
+    "build:esm": "tsc -p tsconfig.json && echo '{\"type\":\"module\"}' > dist/esm/package.json",
+    "build:cjs": "tsc -p tsconfig.cjs.json && echo '{\"type\":\"commonjs\"}' > dist/cjs/package.json",
+    "dev": "tsc -p tsconfig.json --watch",
     "clean": "rm -rf dist",
     "prepublishOnly": "npm run clean && npm run build"
   },
@@ -33,7 +36,7 @@
     "onramp",
     "web3"
   ],
-  "author": "HyperMid",
+  "author": "Hypermid",
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^25.5.0",

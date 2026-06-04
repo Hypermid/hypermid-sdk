@@ -20,7 +20,7 @@ export interface ApiResponse<T = unknown> {
 
 // ─── Config ──────────────────────────────────────────────────────────────
 
-export interface HyperMidConfig {
+export interface HypermidConfig {
   /**
    * Partner API key. **Optional** — the API works fully without a key.
    * Set this only if you're a partner with negotiated fee terms

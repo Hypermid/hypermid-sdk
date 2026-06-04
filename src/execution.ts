@@ -6,7 +6,7 @@
  * status polling, but unified across both providers.
  */
 
-import type { HyperMid } from "./client.js";
+import type { Hypermid } from "./client.js";
 import type {
   ExecuteParams,
   ExecuteResponse,
@@ -95,7 +95,7 @@ export interface ExecutionConfig {
  * ```
  */
 export async function waitForDepositCompletion(
-  client: HyperMid,
+  client: Hypermid,
   params: { depositAddress: string; depositMemo?: string },
   options?: ExecutionConfig & { onPoll?: (status: DepositStatusResponse) => void },
 ): Promise<DepositStatusResponse> {
@@ -139,7 +139,7 @@ export async function waitForDepositCompletion(
  * ```
  */
 export async function waitForLiFiCompletion(
-  client: HyperMid,
+  client: Hypermid,
   params: { txHash: string; fromChain?: string | number; toChain?: string | number; bridge?: string },
   options?: ExecutionConfig & { onPoll?: (status: StatusResponse) => void },
 ): Promise<StatusResponse> {
@@ -186,10 +186,10 @@ export async function waitForLiFiCompletion(
  *
  * @example Full automated LI.FI swap
  * ```ts
- * import { HyperMid, executeSwap } from "@hypermid/sdk";
+ * import { Hypermid, executeSwap } from "@hypermid/sdk";
  * import { sendTransaction } from "your-wallet-lib";
  *
- * const hm = new HyperMid({ apiKey: "..." });
+ * const hm = new Hypermid({ apiKey: "..." });
  *
  * const result = await executeSwap(hm, {
  *   fromChain: 1,
@@ -249,7 +249,7 @@ export async function waitForLiFiCompletion(
  * ```
  */
 export async function executeSwap(
-  client: HyperMid,
+  client: Hypermid,
   params: ExecuteParams,
   hooks?: ExecutionHooks,
   config?: ExecutionConfig,
@@ -440,7 +440,7 @@ export async function executeSwap(
  * ```
  */
 export async function quoteAndPrepare(
-  client: HyperMid,
+  client: Hypermid,
   params: ExecuteParams,
 ): Promise<{
   quote: QuoteResponse;

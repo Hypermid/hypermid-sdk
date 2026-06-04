@@ -1,9 +1,9 @@
 import type { ApiMeta, RateLimitInfo, LiFiToolError } from "./types.js";
 
 /**
- * Base error thrown by the HyperMid SDK when the API returns an error response.
+ * Base error thrown by the Hypermid SDK when the API returns an error response.
  */
-export class HyperMidError extends Error {
+export class HypermidError extends Error {
   /** The API error code (e.g. "NO_ROUTE_FOUND", "RATE_LIMITED", "UPSTREAM_ERROR") */
   public readonly code: string;
   /** HTTP status code from the API */
@@ -21,7 +21,7 @@ export class HyperMidError extends Error {
     details?: Record<string, unknown>,
   ) {
     super(message);
-    this.name = "HyperMidError";
+    this.name = "HypermidError";
     this.code = code;
     this.status = status;
     this.meta = meta;
@@ -47,25 +47,25 @@ export class HyperMidError extends Error {
 /**
  * Thrown when the request times out.
  */
-export class HyperMidTimeoutError extends Error {
+export class HypermidTimeoutError extends Error {
   public readonly code = "TIMEOUT";
 
   constructor(timeoutMs: number) {
     super(`Request timed out after ${timeoutMs}ms`);
-    this.name = "HyperMidTimeoutError";
+    this.name = "HypermidTimeoutError";
   }
 }
 
 /**
  * Thrown when a network/fetch error occurs.
  */
-export class HyperMidNetworkError extends Error {
+export class HypermidNetworkError extends Error {
   public readonly code = "NETWORK_ERROR";
   public readonly cause?: Error;
 
   constructor(message: string, cause?: Error) {
     super(message);
-    this.name = "HyperMidNetworkError";
+    this.name = "HypermidNetworkError";
     this.cause = cause;
   }
 }

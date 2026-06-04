@@ -1,6 +1,6 @@
 # @hypermid/sdk
 
-TypeScript / JavaScript SDK for the [HyperMid](https://hypermid.io) Partner
+TypeScript / JavaScript SDK for the [Hypermid](https://hypermid.io) Partner
 API — swap, bridge, and on-ramp across 90+ chains (EVM, Solana, Bitcoin,
 Sui, NEAR, Tron, TON, XRP, Doge).
 
@@ -15,13 +15,13 @@ default fee tier — pass an API key only if you're a partner with
 custom fee terms.
 
 ```ts
-import { HyperMid } from "@hypermid/sdk";
+import { Hypermid } from "@hypermid/sdk";
 
 // Anonymous — works immediately, no signup
-const hm = new HyperMid();
+const hm = new Hypermid();
 
 // Partner with custom fees / discounts
-const hm = new HyperMid({ apiKey: process.env.HYPERMID_API_KEY });
+const hm = new Hypermid({ apiKey: process.env.HYPERMID_API_KEY });
 
 // 1. Quote
 const quote = await hm.getQuote({
