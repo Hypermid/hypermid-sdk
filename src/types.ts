@@ -464,6 +464,17 @@ export interface BalancesParams {
   chainIds?: number[];
 }
 
+/**
+ * Tier classification surfaced on each /v1/balances row so SDK
+ * consumers can show priced holdings prominently and tuck away dust /
+ * scam-airdrop noise. Optional — older API revisions don't emit it.
+ *
+ *   - "priced":    USD price > 0 AND balanceUSD ≥ floor (default 0.01).
+ *   - "untracked": no USD price, doesn't match scam patterns.
+ *   - "dust":      scam pattern OR balanceUSD below floor.
+ */
+export type BalanceTier = 'priced' | 'untracked' | 'dust';
+
 export interface TokenBalance {
   chainId: number;
   address: string;
@@ -475,6 +486,8 @@ export interface TokenBalance {
   balanceUSD: number;
   logoURI: string;
   providers: string[];
+  /** Lark #118 — present when the API ran tier classification. */
+  tier?: BalanceTier;
 }
 
 /**
