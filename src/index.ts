@@ -31,6 +31,7 @@ export {
   isManualDeposit,
   isWalletDeposit,
   isNIStatusTerminal,
+  isSuperSwapStatusTerminal,
   isLiFiStatusTerminal,
   isDepositSuccess,
   isDepositRefunded,
@@ -50,6 +51,14 @@ export type {
   ExecutionHooks,
   ExecutionConfig,
 } from "./execution.js";
+
+// ─── EIP-7702 / EIP-5792 atomic batch (1-tap approve + swap) ──────────────
+export {
+  supportsAtomicBatch,
+  sendAtomicApproveAndSwap,
+  encodeApprove,
+} from "./eip7702.js";
+export type { Eip1193Provider, AtomicSwapParams } from "./eip7702.js";
 
 // ─── Webhook verification ────────────────────────────────────────────────
 export { verifyWebhookSignature } from "./webhook-verify.js";
@@ -83,6 +92,7 @@ export type {
   // Quote
   QuoteParams,
   QuoteResponse,
+  SuperSwapV2Quote,
   LiFiToolError,
 
   // Routes
@@ -93,6 +103,8 @@ export type {
   LiFiStatusParams,
   NIStatusParams,
   StatusResponse,
+  SuperSwapV2Status,
+  SuperSwapV2StatusLeg,
 
   // Execute
   DepositMode,

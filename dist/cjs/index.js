@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyWebhookSignature = exports.quoteAndPrepare = exports.waitForLiFiCompletion = exports.waitForDepositCompletion = exports.executeSwap = exports.isDepositFailed = exports.isDepositRefunded = exports.isDepositSuccess = exports.isLiFiStatusTerminal = exports.isNIStatusTerminal = exports.isWalletDeposit = exports.isManualDeposit = exports.isSuperSwapRoute = exports.isNearIntentsRoute = exports.isLiFiRoute = exports.getDryQuotePlaceholder = exports.getChainsByProvider = exports.getAllChains = exports.isNIOnlyChain = exports.toNumericId = exports.toNIBlockchain = exports.toLifiChainId = exports.resolveChain = exports.NI_CHAIN_BASE = exports.CHAIN_REGISTRY = exports.supportsWalletDeposit = exports.isNearIntentsChain = exports.ChainSlug = exports.ChainId = exports.HypermidNetworkError = exports.HypermidTimeoutError = exports.HypermidError = exports.Hypermid = void 0;
+exports.verifyWebhookSignature = exports.encodeApprove = exports.sendAtomicApproveAndSwap = exports.supportsAtomicBatch = exports.quoteAndPrepare = exports.waitForLiFiCompletion = exports.waitForDepositCompletion = exports.executeSwap = exports.isDepositFailed = exports.isDepositRefunded = exports.isDepositSuccess = exports.isLiFiStatusTerminal = exports.isSuperSwapStatusTerminal = exports.isNIStatusTerminal = exports.isWalletDeposit = exports.isManualDeposit = exports.isSuperSwapRoute = exports.isNearIntentsRoute = exports.isLiFiRoute = exports.getDryQuotePlaceholder = exports.getChainsByProvider = exports.getAllChains = exports.isNIOnlyChain = exports.toNumericId = exports.toNIBlockchain = exports.toLifiChainId = exports.resolveChain = exports.NI_CHAIN_BASE = exports.CHAIN_REGISTRY = exports.supportsWalletDeposit = exports.isNearIntentsChain = exports.ChainSlug = exports.ChainId = exports.HypermidNetworkError = exports.HypermidTimeoutError = exports.HypermidError = exports.Hypermid = void 0;
 // ─── Core client ─────────────────────────────────────────────────────────
 var client_js_1 = require("./client.js");
 Object.defineProperty(exports, "Hypermid", { enumerable: true, get: function () { return client_js_1.Hypermid; } });
@@ -35,6 +35,7 @@ Object.defineProperty(exports, "isSuperSwapRoute", { enumerable: true, get: func
 Object.defineProperty(exports, "isManualDeposit", { enumerable: true, get: function () { return helpers_js_1.isManualDeposit; } });
 Object.defineProperty(exports, "isWalletDeposit", { enumerable: true, get: function () { return helpers_js_1.isWalletDeposit; } });
 Object.defineProperty(exports, "isNIStatusTerminal", { enumerable: true, get: function () { return helpers_js_1.isNIStatusTerminal; } });
+Object.defineProperty(exports, "isSuperSwapStatusTerminal", { enumerable: true, get: function () { return helpers_js_1.isSuperSwapStatusTerminal; } });
 Object.defineProperty(exports, "isLiFiStatusTerminal", { enumerable: true, get: function () { return helpers_js_1.isLiFiStatusTerminal; } });
 Object.defineProperty(exports, "isDepositSuccess", { enumerable: true, get: function () { return helpers_js_1.isDepositSuccess; } });
 Object.defineProperty(exports, "isDepositRefunded", { enumerable: true, get: function () { return helpers_js_1.isDepositRefunded; } });
@@ -45,6 +46,11 @@ Object.defineProperty(exports, "executeSwap", { enumerable: true, get: function 
 Object.defineProperty(exports, "waitForDepositCompletion", { enumerable: true, get: function () { return execution_js_1.waitForDepositCompletion; } });
 Object.defineProperty(exports, "waitForLiFiCompletion", { enumerable: true, get: function () { return execution_js_1.waitForLiFiCompletion; } });
 Object.defineProperty(exports, "quoteAndPrepare", { enumerable: true, get: function () { return execution_js_1.quoteAndPrepare; } });
+// ─── EIP-7702 / EIP-5792 atomic batch (1-tap approve + swap) ──────────────
+var eip7702_js_1 = require("./eip7702.js");
+Object.defineProperty(exports, "supportsAtomicBatch", { enumerable: true, get: function () { return eip7702_js_1.supportsAtomicBatch; } });
+Object.defineProperty(exports, "sendAtomicApproveAndSwap", { enumerable: true, get: function () { return eip7702_js_1.sendAtomicApproveAndSwap; } });
+Object.defineProperty(exports, "encodeApprove", { enumerable: true, get: function () { return eip7702_js_1.encodeApprove; } });
 // ─── Webhook verification ────────────────────────────────────────────────
 var webhook_verify_js_1 = require("./webhook-verify.js");
 Object.defineProperty(exports, "verifyWebhookSignature", { enumerable: true, get: function () { return webhook_verify_js_1.verifyWebhookSignature; } });

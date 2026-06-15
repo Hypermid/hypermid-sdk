@@ -9,6 +9,7 @@ exports.isNearIntentsRoute = isNearIntentsRoute;
 exports.isManualDeposit = isManualDeposit;
 exports.isWalletDeposit = isWalletDeposit;
 exports.isNIStatusTerminal = isNIStatusTerminal;
+exports.isSuperSwapStatusTerminal = isSuperSwapStatusTerminal;
 exports.isLiFiStatusTerminal = isLiFiStatusTerminal;
 exports.isDepositSuccess = isDepositSuccess;
 exports.isDepositRefunded = isDepositRefunded;
@@ -76,11 +77,19 @@ function isWalletDeposit(response) {
 const TERMINAL_NI_STATUSES = new Set(["SUCCESS", "REFUNDED", "FAILED"]);
 /** Terminal LI.FI statuses */
 const TERMINAL_LIFI_STATUSES = new Set(["DONE", "FAILED"]);
+/** Terminal SuperSwap V2 statuses (vocabulary: PENDING | DONE | FAILED | NOT_FOUND | INVALID) */
+const TERMINAL_SUPERSWAP_STATUSES = new Set(["DONE", "FAILED"]);
 /**
  * Check if a Near Intents deposit status is terminal (no more polling needed).
  */
 function isNIStatusTerminal(status) {
     return TERMINAL_NI_STATUSES.has(status);
+}
+/**
+ * Check if a SuperSwap V2 status is terminal (no more polling needed).
+ */
+function isSuperSwapStatusTerminal(status) {
+    return TERMINAL_SUPERSWAP_STATUSES.has(status);
 }
 /**
  * Check if a LI.FI status is terminal.

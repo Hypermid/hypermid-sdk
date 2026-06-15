@@ -129,9 +129,49 @@ export interface LiFiToolError {
 
 export interface QuoteResponse {
   quote: unknown;
-  provider: "lifi" | "near-intents";
+  provider: "lifi" | "near-intents" | "superswap";
   feeBps: number;
   isDryQuote: boolean;
+}
+
+/**
+ * SuperSwap V2 quote shape (the `quote` field when `provider === "superswap"`).
+ *
+ * The V2 backend returns a LiFi-style executable envelope. Cast the opaque
+ * `QuoteResponse.quote` to this once you've discriminated on the provider:
+ *
+ * ```ts
+ * const res = await hm.getQuote(params);
+ * if (res.provider === "superswap") {
+ *   const q = res.quote as SuperSwapV2Quote;
+ *   // approve q.approvalAddress, then send q.transactionRequest
+ * }
+ * ```
+ */
+export interface SuperSwapV2Quote {
+  id: string;
+  provider: "superswap";
+  /** V2 routing source: "lifi" | "piteas" | "uniswap_v3" | "superswap". */
+  source: string;
+  tool: string;
+  /** Always true — marks the turnkey V2 path. */
+  v2: true;
+  direction: "inbound" | "outbound" | "samechain";
+  fromChainId: number;
+  toChainId: number;
+  fromToken: { address: string; symbol: string; decimals: number };
+  toToken: { address: string; symbol: string; decimals: number };
+  fromAmount: string;
+  estimatedOutput: string;
+  minOutput: string;
+  estimatedDuration: number;
+  /** ERC20 approval target (source DiamondShell). Equals transactionRequest.to. */
+  approvalAddress: string;
+  fromAmountUSD?: string;
+  toAmountUSD?: string;
+  /** Quote staleness — reject after this (unix seconds). */
+  expiresAt: number;
+  transactionRequest: TransactionRequest;
 }
 
 // ─── Routes ──────────────────────────────────────────────────────────────
@@ -165,9 +205,44 @@ export interface NIStatusParams {
 export type StatusParams = LiFiStatusParams | NIStatusParams;
 
 export interface StatusResponse {
-  provider: "lifi" | "near-intents";
+  provider: "lifi" | "near-intents" | "superswap";
   status?: string;
   [key: string]: unknown;
+}
+
+/** One leg (sending/receiving) of a SuperSwap V2 transfer. */
+export interface SuperSwapV2StatusLeg {
+  txHash: string;
+  chainId: number;
+  amount: string;
+  token: { address: string; symbol: string; decimals: number };
+}
+
+/**
+ * SuperSwap V2 status shape (when `provider === "superswap"`). A `StatusResponse`
+ * with `provider === "superswap"` carries these extra fields; cast to read them.
+ *
+ * ```ts
+ * const s = await hm.getStatus(params);
+ * if (s.provider === "superswap") {
+ *   const v2 = s as SuperSwapV2Status;
+ *   console.log(v2.hyperlaneMessageId, v2.receiving?.txHash);
+ * }
+ * ```
+ */
+export interface SuperSwapV2Status extends StatusResponse {
+  provider: "superswap";
+  /** Canonical V2 vocabulary. */
+  status: "PENDING" | "DONE" | "FAILED" | "NOT_FOUND" | "INVALID";
+  tool: string;
+  /** Hyperlane messageId — stable across both legs. */
+  hyperlaneMessageId: string;
+  subStatus?: string | null;
+  subStatusMessage?: string | null;
+  sending?: SuperSwapV2StatusLeg | null;
+  receiving?: SuperSwapV2StatusLeg | null;
+  /** Convenience mirror of receiving.txHash. */
+  destinationTxHash?: string;
 }
 
 // ─── Execute ─────────────────────────────────────────────────────────────

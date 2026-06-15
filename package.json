@@ -1,6 +1,6 @@
 {
   "name": "@hypermid/sdk",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "description": "Cross-chain swap, bridge & fiat on-ramp SDK — 90+ chains across EVM, Solana, Bitcoin, NEAR, Sui, Tron, TON. Multi-ecosystem wallet balances, partner webhooks, anonymous-tier ready (no API key required).",
   "homepage": "https://docs.hypermid.io",
   "repository": {

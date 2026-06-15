@@ -53,6 +53,10 @@ export declare function isWalletDeposit(response: ExecuteResponse): boolean;
  */
 export declare function isNIStatusTerminal(status: string): boolean;
 /**
+ * Check if a SuperSwap V2 status is terminal (no more polling needed).
+ */
+export declare function isSuperSwapStatusTerminal(status: string): boolean;
+/**
  * Check if a LI.FI status is terminal.
  */
 export declare function isLiFiStatusTerminal(status: string): boolean;
