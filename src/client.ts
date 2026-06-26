@@ -59,7 +59,14 @@ export class Hypermid {
     this.baseUrl = (config.baseUrl || DEFAULT_BASE_URL).replace(/\/+$/, "");
     this.apiKey = config.apiKey;
     this.timeout = config.timeout || DEFAULT_TIMEOUT;
-    this._fetch = config.fetch || globalThis.fetch;
+    // Bind the default to globalThis. The client invokes `this._fetch(url)` as a
+    // METHOD, so a BARE `globalThis.fetch` would run with `this` = this Hypermid
+    // instance — which browsers reject with
+    //   TypeError: Failed to execute 'fetch' on 'Window': Illegal invocation
+    // Binding here means consumers no longer need an app-side `(...a) => fetch(...a)`
+    // wrapper (previously required in hypermid-app). A caller-supplied
+    // `config.fetch` is used verbatim (they own its binding).
+    this._fetch = config.fetch || globalThis.fetch.bind(globalThis);
   }
 
   // ─── Internal helpers ────────────────────────────────────────────────
